@@ -1,0 +1,43 @@
+name: Python CI Pipeline
+
+on:
+  push:
+    branches:
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11, 3.12, 3.13]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      # Run unit tests
+      - name: Run Unit Tests
+        run: uv run pytest --maxfail=1 --disable-warnings -q
+
+      # # Build docker image
+      # - name: Build Docker image
+      #   run: |
+      #     docker build -t python-app:${{ github.sha }} .
